@@ -8,123 +8,79 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg:#0f1a0f; --surface:#1a2a1a; --surface2:#223022; --border:#2e3e2e;
-  --text:#e8f0e8; --text2:#8aaa8a; --text3:#4a6a4a; --accent:#4a9e6a;
-  --c-flood:#9c27b0; --c-high:#2196f3; --c-normal:#4caf50;
-  --c-below:#ff9800; --c-low:#f44336; --c-unknown:#607d8b;
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f1a0f;--surface:#1a2a1a;--surface2:#223022;--border:#2e3e2e;
+  --text:#e8f0e8;--text2:#8aaa8a;--text3:#4a6a4a;--accent:#4a9e6a;
 }
 html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);}
 #shell{display:flex;flex-direction:column;height:100vh;}
-
 #hdr{
   background:var(--surface);border-bottom:1px solid var(--border);
-  padding:0 20px;height:54px;display:flex;align-items:center;gap:16px;
-  flex-shrink:0;z-index:1000;
+  padding:0 20px;height:54px;display:flex;align-items:center;gap:16px;flex-shrink:0;z-index:1000;
 }
-#hdr h1{font-size:15px;font-weight:600;white-space:nowrap;letter-spacing:-.2px;}
+#hdr h1{font-size:15px;font-weight:600;white-space:nowrap;}
 #hdr h1 span{color:var(--accent);}
 #basin-select{
   font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
   padding:6px 12px;border-radius:8px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--text);cursor:pointer;outline:none;
-  min-width:215px;transition:border-color .15s;
+  background:var(--surface2);color:var(--text);cursor:pointer;outline:none;min-width:215px;
 }
-#basin-select:focus{border-color:var(--accent);}
 #refresh-btn{
   font-family:'Outfit',sans-serif;font-size:12px;padding:6px 12px;
   border-radius:8px;border:1px solid var(--border);background:transparent;
-  color:var(--text2);cursor:pointer;display:none;align-items:center;gap:5px;
-  white-space:nowrap;transition:color .15s,border-color .15s;
+  color:var(--text2);cursor:pointer;display:none;white-space:nowrap;
 }
 #refresh-btn:hover{color:var(--accent);border-color:var(--accent);}
-#status-pill{
-  margin-left:auto;font-size:11px;font-family:'JetBrains Mono',monospace;
-  color:var(--text3);display:flex;align-items:center;gap:7px;white-space:nowrap;
-}
-.spin{
-  width:10px;height:10px;border:1.5px solid var(--border);
-  border-top-color:var(--accent);border-radius:50%;
-  animation:spin .7s linear infinite;display:none;flex-shrink:0;
-}
+#status-pill{margin-left:auto;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text3);display:flex;align-items:center;gap:7px;white-space:nowrap;}
+.spin{width:10px;height:10px;border:1.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:none;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
-
 #legend-bar{
   background:var(--surface);border-bottom:1px solid var(--border);
-  padding:0 20px;height:34px;display:none;align-items:center;gap:16px;
-  flex-shrink:0;overflow-x:auto;
+  padding:0 20px;height:34px;display:none;align-items:center;gap:16px;flex-shrink:0;overflow-x:auto;
 }
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);white-space:nowrap;}
 .leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-
-#map-wrap{flex:1;position:relative;}
+#map-wrap{flex:1;position:relative;min-height:0;}
 #map{width:100%;height:100%;}
-
 #idle{
   position:absolute;inset:0;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:10px;
-  pointer-events:none;z-index:500;background:rgba(15,26,15,.6);
+  pointer-events:none;z-index:500;background:rgba(15,26,15,.7);
 }
-#idle svg{width:36px;height:36px;stroke:var(--text3);fill:none;stroke-width:1.5;}
 #idle p{font-size:13px;color:var(--text2);}
-
 #panel{
-  position:absolute;top:14px;right:14px;width:248px;
+  position:absolute;top:14px;right:14px;width:250px;
   background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:16px;display:none;
-  z-index:900;box-shadow:0 8px 32px rgba(0,0,0,.5);
+  border-radius:12px;padding:16px;display:none;z-index:900;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
 }
-#panel-close{
-  float:right;font-size:20px;line-height:1;cursor:pointer;
-  color:var(--text3);background:none;border:none;transition:color .15s;
-}
-#panel-close:hover{color:var(--text);}
+#panel-close{float:right;font-size:20px;line-height:1;cursor:pointer;color:var(--text3);background:none;border:none;}
 #p-name{font-size:14px;font-weight:600;padding-right:20px;margin-bottom:2px;}
 #p-sub{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:14px;}
 .p-stat{margin-bottom:12px;}
 .p-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:3px;}
 .p-stat-row{display:flex;align-items:baseline;gap:4px;}
-.p-stat-val{font-size:26px;font-weight:600;font-family:'JetBrains Mono',monospace;line-height:1;}
-.p-stat-unit{font-size:12px;color:var(--text2);}
+.p-val{font-size:26px;font-weight:600;font-family:'JetBrains Mono',monospace;line-height:1;}
+.p-unit{font-size:12px;color:var(--text2);}
 .p-trend{font-size:11px;font-family:'JetBrains Mono',monospace;margin-top:3px;}
 .t-up{color:#f44336;}.t-dn{color:#4caf50;}.t-st{color:var(--text3);}
-#p-badge{
-  display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;
-  padding:5px 10px;border-radius:20px;margin-bottom:8px;
-}
+#p-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;padding:5px 10px;border-radius:20px;margin-bottom:8px;}
 #p-pct{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:10px;}
 #p-updated{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:12px;}
-#p-link{
-  display:block;font-size:11px;color:var(--accent);text-decoration:none;
-  border-top:1px solid var(--border);padding-top:10px;transition:opacity .15s;
-}
-#p-link:hover{opacity:.7;}
-
-/* Leaflet overrides */
-.leaflet-container{background:#f5f3ef;}
-.leaflet-control-zoom a{background:#fff!important;color:#333!important;border-color:#ccc!important;}
-.leaflet-control-attribution{background:rgba(255,255,255,.8)!important;color:#999!important;font-size:9px!important;}
-.leaflet-control-attribution a{color:#999!important;}
-
-/* Gauge marker */
-.gm{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  width:46px;height:46px;border-radius:50%;
-  border:2.5px solid rgba(255,255,255,.4);
-  font-family:'JetBrains Mono',monospace;color:#fff;
-  cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.7);
-  transition:transform .15s;line-height:1.1;
-}
+#p-link{display:block;font-size:11px;color:var(--accent);text-decoration:none;border-top:1px solid var(--border);padding-top:10px;}
+.leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;}
+.leaflet-control-attribution{background:rgba(15,26,15,.7)!important;color:var(--text3)!important;font-size:9px!important;}
+.leaflet-control-attribution a{color:var(--text3)!important;}
+.gm{display:flex;flex-direction:column;align-items:center;justify-content:center;width:50px;height:50px;border-radius:50%;border:3px solid rgba(255,255,255,.9);font-family:'JetBrains Mono',monospace;color:#fff;cursor:pointer;box-shadow:0 0 0 4px rgba(0,0,0,.25), 0 2px 14px rgba(0,0,0,.7);transition:transform .15s;line-height:1.1;text-shadow:0 1px 3px rgba(0,0,0,.6);}
 .gm:hover{transform:scale(1.25);}
-.gm .v{font-size:10px;font-weight:600;}
-.gm .u{font-size:7px;opacity:.8;}
-
-@media(max-width:600px){
-  #hdr h1{display:none;}
-  #status-pill{display:none;}
-  #panel{width:calc(100vw - 24px);right:12px;top:auto;bottom:12px;}
-}
+.gm .v{font-size:11px;font-weight:700;}
+.gm .u{font-size:7px;opacity:.9;}
+.lm{display:flex;flex-direction:column;align-items:center;justify-content:center;width:54px;height:54px;border-radius:8px;border:3px solid rgba(255,255,255,.9);font-family:'JetBrains Mono',monospace;color:#fff;cursor:pointer;box-shadow:0 0 0 4px rgba(0,0,0,.25), 0 2px 14px rgba(0,0,0,.7);transition:transform .15s;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+.lm:hover{transform:scale(1.25);}
+.lm .v{font-size:9px;font-weight:700;text-align:center;}
+.lm .u{font-size:7px;opacity:.9;}
+@media(max-width:600px){#hdr h1{display:none;}#status-pill{display:none;}#panel{width:calc(100vw - 24px);right:12px;top:auto;bottom:12px;}}
 </style>
 </head>
 <body>
@@ -147,35 +103,31 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
       <span id="status-txt">Select a basin to begin</span>
     </div>
   </div>
-
   <div id="legend-bar">
     <span style="font-size:10px;color:var(--text3);margin-right:2px;">% of 30-yr avg:</span>
-    <div class="leg"><span class="leg-dot" style="background:var(--c-flood)"></span>Flood stage</div>
-    <div class="leg"><span class="leg-dot" style="background:var(--c-high)"></span>Above normal &gt;75th</div>
-    <div class="leg"><span class="leg-dot" style="background:var(--c-normal)"></span>Normal 25–75th</div>
-    <div class="leg"><span class="leg-dot" style="background:var(--c-below)"></span>Below normal 10–25th</div>
-    <div class="leg"><span class="leg-dot" style="background:var(--c-low)"></span>Much below &lt;10th</div>
-    <div class="leg"><span class="leg-dot" style="background:var(--c-unknown)"></span>No data</div>
+    <div class="leg"><span class="leg-dot" style="background:#9c27b0"></span>Flood stage</div>
+    <div class="leg"><span class="leg-dot" style="background:#2196f3"></span>Above normal &gt;75th</div>
+    <div class="leg"><span class="leg-dot" style="background:#4caf50"></span>Normal 25–75th</div>
+    <div class="leg"><span class="leg-dot" style="background:#ff9800"></span>Below normal 10–25th</div>
+    <div class="leg"><span class="leg-dot" style="background:#f44336"></span>Much below &lt;10th</div>
+    <div class="leg"><span class="leg-dot" style="background:#607d8b"></span>No data</div>
+    <div class="leg" style="margin-left:6px;padding-left:6px;border-left:1px solid var(--border);">■ lake &nbsp; ● river</div>
   </div>
-
   <div id="map-wrap">
     <div id="map"></div>
-    <div id="idle">
-      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-      <p>Select a river basin above to load live gauge data</p>
-    </div>
+    <div id="idle"><p>📍 Select a river basin above to load live gauge data</p></div>
     <div id="panel">
       <button id="panel-close" onclick="closePanel()">×</button>
       <div id="p-name">—</div>
       <div id="p-sub">—</div>
       <div class="p-stat">
-        <div class="p-stat-label">Gauge Height</div>
-        <div class="p-stat-row"><span class="p-stat-val" id="p-stage">—</span><span class="p-stat-unit">ft</span></div>
+        <div class="p-stat-label" id="p-height-label">Gauge Height</div>
+        <div class="p-stat-row"><span class="p-val" id="p-stage">—</span><span class="p-unit">ft</span></div>
         <div class="p-trend" id="p-trend"></div>
       </div>
       <div class="p-stat">
         <div class="p-stat-label">Discharge</div>
-        <div class="p-stat-row"><span class="p-stat-val" id="p-cfs">—</span><span class="p-stat-unit">cfs</span></div>
+        <div class="p-stat-row"><span class="p-val" id="p-cfs">—</span><span class="p-unit">cfs</span></div>
       </div>
       <div id="p-badge">
         <span style="width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;" id="p-bdot"></span>
@@ -187,347 +139,347 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
     </div>
   </div>
 </div>
-
 <script>
-// ─────────────────────────────────────────────────────────────────────────────
-// GAUGE DATABASE
-// ─────────────────────────────────────────────────────────────────────────────
+// ── GAUGES ────────────────────────────────────────────────────────────────────
 const GAUGES = [
-  // Guadalupe
-  {id:'08167500',name:'Guadalupe at Comfort',        basin:'Guadalupe',  flood:18, lat:29.9689,lng:-98.9056},
-  {id:'08168500',name:'Guadalupe at Spring Branch',  basin:'Guadalupe',  flood:20, lat:29.8597,lng:-98.4739},
-  {id:'08170000',name:'Guadalupe at New Braunfels',  basin:'Guadalupe',  flood:22, lat:29.7030,lng:-98.1253},
-  {id:'08175000',name:'Guadalupe at Seguin',         basin:'Guadalupe',  flood:24, lat:29.5708,lng:-97.9681},
-  {id:'08176500',name:'Guadalupe at Victoria',       basin:'Guadalupe',  flood:28, lat:28.7922,lng:-97.0183},
-  // Comal
-  {id:'08169000',name:'Comal River at New Braunfels',basin:'Comal',      flood:15, lat:29.7100,lng:-98.1311},
-  // Blanco
-  {id:'08171000',name:'Blanco River at Wimberley',   basin:'Blanco',     flood:20, lat:29.9983,lng:-98.1003},
-  {id:'08171300',name:'Blanco River at Kyle',        basin:'Blanco',     flood:22, lat:30.0141,lng:-97.8781},
-  // San Antonio
-  {id:'08178000',name:'San Antonio River at SA',     basin:'SanAntonio', flood:18, lat:29.4247,lng:-98.4928},
-  {id:'08178800',name:'San Antonio R. nr Elmendorf', basin:'SanAntonio', flood:20, lat:29.2558,lng:-98.3183},
-  // Medina
-  {id:'08198500',name:'Medina River at Bandera',     basin:'Medina',     flood:16, lat:29.7272,lng:-99.0736},
-  {id:'08199500',name:'Medina River at Castroville', basin:'Medina',     flood:22, lat:29.3597,lng:-98.8800},
-  // Frio
-  {id:'08194500',name:'Frio River at Concan',        basin:'Frio',       flood:16, lat:29.4872,lng:-99.7042},
-  {id:'08195000',name:'Frio River at Uvalde',        basin:'Frio',       flood:22, lat:29.2094,lng:-99.7856},
-  // Nueces
-  {id:'08196500',name:'Nueces River at Laguna',      basin:'Nueces',     flood:20, lat:29.7419,lng:-100.019},
-  {id:'08197500',name:'Nueces River at Cotulla',     basin:'Nueces',     flood:24, lat:28.4364,lng:-99.2336},
+  // ── Guadalupe River ──────────────────────────────────────────────────────────
+  {id:'08165300',name:'N. Fork Guadalupe nr Hunt',    basin:'Guadalupe',  flood:14, lat:30.0619, lng:-99.3400, type:'river'},
+  {id:'08165500',name:'Guadalupe at Hunt',            basin:'Guadalupe',  flood:16, lat:30.0683, lng:-99.3486, type:'river'},
+  {id:'08166200',name:'Guadalupe at Kerrville',       basin:'Guadalupe',  flood:20, lat:30.0280, lng:-99.1403, type:'river'},
+  {id:'08167000',name:'Guadalupe at Comfort',         basin:'Guadalupe',  flood:18, lat:29.9694, lng:-98.9058, type:'river'},
+  {id:'08167500',name:'Guadalupe nr Spring Branch',   basin:'Guadalupe',  flood:20, lat:29.8597, lng:-98.4739, type:'river'},
+  {id:'08167700',name:'Canyon Lake',                  basin:'Guadalupe',  flood:943,lat:29.8783, lng:-98.2003, type:'lake'},
+  {id:'08167800',name:'Guadalupe at Sattler',         basin:'Guadalupe',  flood:18, lat:29.8667, lng:-98.1819, type:'river'},
+  {id:'08170000',name:'Guadalupe at New Braunfels',   basin:'Guadalupe',  flood:22, lat:29.7030, lng:-98.1253, type:'river'},
+  {id:'08173900',name:'Guadalupe at Gonzales',        basin:'Guadalupe',  flood:31, lat:29.5100, lng:-97.4514, type:'river'},
+  {id:'08175000',name:'Guadalupe at Seguin',          basin:'Guadalupe',  flood:24, lat:29.5708, lng:-97.9681, type:'river'},
+  {id:'08175800',name:'Guadalupe at Cuero',           basin:'Guadalupe',  flood:28, lat:29.0750, lng:-97.2933, type:'river'},
+  {id:'08176500',name:'Guadalupe at Victoria',        basin:'Guadalupe',  flood:28, lat:28.7922, lng:-97.0183, type:'river'},
+  // ── Comal River ──────────────────────────────────────────────────────────────
+  {id:'08169000',name:'Comal River at New Braunfels', basin:'Comal',      flood:15, lat:29.7100, lng:-98.1311, type:'river'},
+  // ── Blanco River ─────────────────────────────────────────────────────────────
+  {id:'08171000',name:'Blanco River at Wimberley',    basin:'Blanco',     flood:20, lat:29.9983, lng:-98.1003, type:'river'},
+  {id:'08171300',name:'Blanco River at Kyle',         basin:'Blanco',     flood:22, lat:30.0141, lng:-97.8781, type:'river'},
+  {id:'08171350',name:'Blanco River at San Marcos',   basin:'Blanco',     flood:18, lat:29.8830, lng:-97.9414, type:'river'},
+  // ── San Antonio River ─────────────────────────────────────────────────────────
+  {id:'08178000',name:'San Antonio River at SA',      basin:'SanAntonio', flood:18, lat:29.4247, lng:-98.4928, type:'river'},
+  {id:'08178565',name:'San Antonio R. at Loop 410',   basin:'SanAntonio', flood:20, lat:29.3794, lng:-98.5292, type:'river'},
+  {id:'08178800',name:'San Antonio R. nr Elmendorf',  basin:'SanAntonio', flood:20, lat:29.2558, lng:-98.3183, type:'river'},
+  // ── Medina River ─────────────────────────────────────────────────────────────
+  {id:'08198500',name:'Medina River at Bandera',      basin:'Medina',     flood:16, lat:29.7272, lng:-99.0736, type:'river'},
+  {id:'08178980',name:'Medina R. abv Pipe Creek',     basin:'Medina',     flood:18, lat:29.6775, lng:-98.9397, type:'river'},
+  {id:'08194000',name:'Medina Lake',                  basin:'Medina',     flood:1070,lat:29.5397,lng:-98.9350, type:'lake'},
+  {id:'08199500',name:'Medina River at Castroville',  basin:'Medina',     flood:22, lat:29.3597, lng:-98.8800, type:'river'},
+  // ── Frio River ───────────────────────────────────────────────────────────────
+  {id:'08194840',name:'Frio River at Leakey',         basin:'Frio',       flood:14, lat:29.7228, lng:-99.7983, type:'river'},
+  {id:'08194880',name:'Frio River bl Leakey',         basin:'Frio',       flood:15, lat:29.6947, lng:-99.7650, type:'river'},
+  {id:'08194500',name:'Frio River at Concan',         basin:'Frio',       flood:16, lat:29.4872, lng:-99.7042, type:'river'},
+  {id:'08195000',name:'Frio River at Uvalde',         basin:'Frio',       flood:22, lat:29.2094, lng:-99.7856, type:'river'},
+  // ── Nueces River ─────────────────────────────────────────────────────────────
+  {id:'08196500',name:'Nueces River at Laguna',       basin:'Nueces',     flood:20, lat:29.7419, lng:-100.019, type:'river'},
+  {id:'08192000',name:'Nueces River bl Uvalde',       basin:'Nueces',     flood:22, lat:29.1858, lng:-99.7475, type:'river'},
+  {id:'08197500',name:'Nueces River at Cotulla',      basin:'Nueces',     flood:24, lat:28.4364, lng:-99.2336, type:'river'},
+  {id:'08210000',name:'Nueces R. nr Three Rivers',    basin:'Nueces',     flood:25, lat:28.4272, lng:-98.1778, type:'river'},
 ];
 
-// Map views per basin [lat, lng, zoom]
 const VIEWS = {
-  Guadalupe:  [29.55,-98.25,9],
-  Comal:      [29.71,-98.13,14],
-  Blanco:     [30.02,-98.00,11],
-  SanAntonio: [29.34,-98.41,11],
-  Medina:     [29.56,-98.99,10],
-  Frio:       [29.36,-99.74,10],
-  Nueces:     [29.10,-99.65,9],
+  Guadalupe:  {lat:29.65, lng:-98.20, zoom:8},
+  Comal:      {lat:29.71, lng:-98.13, zoom:14},
+  Blanco:     {lat:29.95, lng:-98.05, zoom:10},
+  SanAntonio: {lat:29.33, lng:-98.47, zoom:11},
+  Medina:     {lat:29.55, lng:-98.99, zoom:10},
+  Frio:       {lat:29.50, lng:-99.76, zoom:10},
+  Nueces:     {lat:28.85, lng:-99.40, zoom:8},
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────────────────────────────────────
-let map, activeBasin=null, gaugeData={}, markers=[], riverLayers=[];
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let map = null, activeBasin = null, gaugeData = {}, markers = [];
 
-// Overpass queries — fetch only the selected river by name within its bounding box
-const OVERPASS = {
-  Guadalupe:  `[out:json][timeout:30];(way["name"="Guadalupe River"]["waterway"~"river|stream"](28.5,-99.6,30.2,-96.8););out geom;`,
-  Comal:      `[out:json][timeout:30];(way["name"="Comal River"]["waterway"~"river|stream"](29.5,-98.3,30.0,-97.9););out geom;`,
-  Blanco:     `[out:json][timeout:30];(way["name"="Blanco River"]["waterway"~"river|stream"](29.7,-98.6,30.4,-97.7););out geom;`,
-  SanAntonio: `[out:json][timeout:30];(way["name"="San Antonio River"]["waterway"~"river|stream"](28.8,-98.8,29.9,-97.7););out geom;`,
-  Medina:     `[out:json][timeout:30];(way["name"="Medina River"]["waterway"~"river|stream"](29.0,-99.5,30.2,-98.5););out geom;`,
-  Frio:       `[out:json][timeout:30];(way["name"="Frio River"]["waterway"~"river|stream"](28.4,-100.3,30.1,-99.3););out geom;`,
-  Nueces:     `[out:json][timeout:30];(way["name"="Nueces River"]["waterway"~"river|stream"](27.3,-100.6,30.2,-98.4););out geom;`,
-};
+// ── MAP INIT ──────────────────────────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', {
+    center: [29.6, -98.8],
+    zoom: 8,
+    preferCanvas: true
+  });
 
-function clearRivers(){
-  riverLayers.forEach(l=>map.removeLayer(l));
-  riverLayers=[];
+  // Esri World Street Map — no API key, no CORS issues, works everywhere
+  L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    {
+      attribution: 'Tiles © Esri — Esri, HERE, Garmin, USGS',
+      maxZoom: 19
+    }
+  ).addTo(map);
+
+  // Fix map sizing
+  setTimeout(() => map.invalidateSize(), 100);
 }
 
-async function fetchAndDrawRiver(basin){
-  clearRivers();
-  const query=OVERPASS[basin];
-  if(!query) return;
-  try{
-    const res=await fetch('https://overpass-api.de/api/interpreter',{
-      method:'POST',
-      body:'data='+encodeURIComponent(query),
-      headers:{'Content-Type':'application/x-www-form-urlencoded'}
-    });
-    if(!res.ok) return;
-    const data=await res.json();
-    (data.elements||[]).forEach(el=>{
-      if(el.type==='way'&&el.geometry&&el.geometry.length>=2){
-        const coords=el.geometry.map(p=>[p.lat,p.lon]);
-        // Draw a white halo beneath for contrast, then the blue line on top
-        const halo=L.polyline(coords,{color:'#ffffff',weight:7,opacity:0.7,smoothFactor:1}).addTo(map);
-        const line=L.polyline(coords,{color:'#1565c0',weight:3.5,opacity:0.9,smoothFactor:1}).addTo(map);
-        riverLayers.push(halo,line);
-      }
-    });
-  }catch(e){
-    console.warn('River fetch failed:',e.message);
-  }
-}
 
-function initMap(){
-  map = L.map('map',{center:[29.6,-98.8],zoom:8});
-  // CartoDB Positron — minimal basemap: major roads + cities, no waterways drawn
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
-    attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a> © <a href="https://carto.com">CARTO</a>',
-    subdomains:'abcd',maxZoom:19
-  }).addTo(map);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// COLOR / STATUS
-// ─────────────────────────────────────────────────────────────────────────────
-function pctColor(pct,stage,flood){
-  if(stage!==null&&!isNaN(stage)&&stage>=flood) return '#9c27b0';
-  if(pct===null||pct===undefined) return '#607d8b';
-  if(pct>75)  return '#2196f3';
-  if(pct>=25) return '#4caf50';
-  if(pct>=10) return '#ff9800';
+function pctColor(pct, stage, flood) {
+  if (stage !== null && !isNaN(stage) && stage >= flood) return '#9c27b0';
+  if (pct === null || pct === undefined) return '#607d8b';
+  if (pct > 75)  return '#2196f3';
+  if (pct >= 25) return '#4caf50';
+  if (pct >= 10) return '#ff9800';
   return '#f44336';
 }
-function pctLabel(pct,stage,flood){
-  if(stage!==null&&!isNaN(stage)&&stage>=flood)
-    return{text:'Flood stage — stay out',color:'#9c27b0'};
-  if(pct===null||pct===undefined)
-    return{text:'Historical data unavailable',color:'#607d8b'};
-  const p=Math.round(pct);
-  if(pct>75)  return{text:`Above normal — ${p}th percentile`,color:'#2196f3'};
-  if(pct>=25) return{text:`Normal — ${p}th percentile`,color:'#4caf50'};
-  if(pct>=10) return{text:`Below normal — ${p}th percentile`,color:'#ff9800'};
-  return{text:`Much below normal — ${p}th percentile`,color:'#f44336'};
+
+function pctLabel(pct, stage, flood) {
+  if (stage !== null && !isNaN(stage) && stage >= flood)
+    return {text:'Flood stage — stay out', color:'#9c27b0'};
+  if (pct === null || pct === undefined)
+    return {text:'Historical data unavailable', color:'#607d8b'};
+  const p = Math.round(pct);
+  if (pct > 75)  return {text:`Above normal — ${p}th percentile`, color:'#2196f3'};
+  if (pct >= 25) return {text:`Normal — ${p}th percentile`, color:'#4caf50'};
+  if (pct >= 10) return {text:`Below normal — ${p}th percentile`, color:'#ff9800'};
+  return {text:`Much below normal — ${p}th percentile`, color:'#f44336'};
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FETCH — USGS instantaneous values + 30yr stats
-// ─────────────────────────────────────────────────────────────────────────────
-async function tryFetch(url, opts={}){
-  // Direct first
-  try{
-    const r=await fetch(url,{...opts,mode:'cors'});
-    if(r.ok) return r;
-  }catch(e){}
-  // Proxy fallback
-  const proxy='https://api.allorigins.win/raw?url='+encodeURIComponent(url);
-  const r2=await fetch(proxy, opts.body ? {} : {});
-  if(!r2.ok) throw new Error('fetch failed: '+url);
-  return r2;
+// ── FETCH ─────────────────────────────────────────────────────────────────────
+async function tryFetch(url) {
+  // Try direct first
+  try {
+    const r = await fetch(url, {mode:'cors'});
+    if (r.ok) return r;
+  } catch(e) {}
+  // Try corsproxy.io
+  try {
+    const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+    if (r.ok) return r;
+  } catch(e) {}
+  // Try allorigins as last resort
+  try {
+    const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+    if (r.ok) return r;
+  } catch(e) {}
+  throw new Error('All fetch attempts failed for: ' + url);
 }
 
-async function fetchBasin(basin){
-  const toFetch=GAUGES.filter(g=>g.basin===basin&&!gaugeData[g.id]);
-  if(!toFetch.length) return;
-  const sites=toFetch.map(g=>g.id).join(',');
+async function fetchBasin(basin) {
+  const toFetch = GAUGES.filter(g => g.basin === basin && !gaugeData[g.id]);
+  if (!toFetch.length) return;
+  const sites = toFetch.map(g => g.id).join(',');
 
-  const ivUrl=`https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${sites}&parameterCd=00065,00060&period=PT6H&siteStatus=active`;
-  const statUrl=`https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites=${sites}&parameterCd=00060&statReportType=daily&statYearType=water`;
+  // Ensure all sites have at least an empty data object so markers still render
+  toFetch.forEach(g => { if (!gaugeData[g.id]) gaugeData[g.id] = {}; });
 
-  // Fetch IV data (gauge height + discharge)
-  try{
-    const res=await tryFetch(ivUrl);
-    const data=await res.json();
-    if(data.value&&data.value.timeSeries){
-      data.value.timeSeries.forEach(ts=>{
-        const site=ts.sourceInfo.siteCode[0].value;
-        const param=ts.variable.variableCode[0].value;
-        const vals=ts.values[0].value.filter(v=>v.value!=='-999999'&&v.value!=='');
-        const last=vals.slice(-1)[0];
-        if(!gaugeData[site]) gaugeData[site]={};
-        if(param==='00065'){
-          gaugeData[site].stage=last?parseFloat(last.value):null;
-          gaugeData[site].time=last?last.dateTime:null;
-          gaugeData[site].stageVals=vals.slice(-12).map(v=>[v.dateTime,v.value]);
+  const ivUrl = `https://waterservices.usgs.gov/nwis/iv/?format=json&sites=${sites}&parameterCd=00065,00060&period=PT6H&siteStatus=active`;
+
+  // IV data — gauge height + discharge (required for map to show anything)
+  try {
+    const res  = await tryFetch(ivUrl);
+    const data = await res.json();
+    if (data.value && data.value.timeSeries) {
+      data.value.timeSeries.forEach(ts => {
+        const site  = ts.sourceInfo.siteCode[0].value;
+        const param = ts.variable.variableCode[0].value;
+        const vals  = ts.values[0].value.filter(v => v.value !== '-999999' && v.value !== '');
+        const last  = vals.slice(-1)[0];
+        if (!gaugeData[site]) gaugeData[site] = {};
+        if (param === '00065') {
+          gaugeData[site].stage     = last ? parseFloat(last.value) : null;
+          gaugeData[site].time      = last ? last.dateTime : null;
+          gaugeData[site].stageVals = vals.slice(-12).map(v => [v.dateTime, v.value]);
         }
-        if(param==='00060'){
-          gaugeData[site].cfs=last?parseFloat(last.value):null;
+        if (param === '00060') {
+          gaugeData[site].cfs = last ? parseFloat(last.value) : null;
         }
       });
     }
-  }catch(e){console.warn('IV fetch failed:',e.message);}
+  } catch(e) { console.warn('IV fetch failed:', e.message); }
 
-  // Mark sites that had no IV data so they still show as unknown
-  toFetch.forEach(g=>{ if(!gaugeData[g.id]) gaugeData[g.id]={}; });
-
-  // Fetch 30yr percentile stats
-  try{
-    const res=await tryFetch(statUrl);
-    const rdb=await res.text();
-    parseRdb(rdb);
-  }catch(e){console.warn('Stats fetch failed:',e.message);}
-}
-
-function parseRdb(rdb){
-  const lines=rdb.split('\n').filter(l=>l&&!l.startsWith('#'));
-  if(lines.length<3) return;
-  const h=lines[0].split('\t');
-  const si=h.indexOf('site_no'), mi=h.indexOf('month_nu'), di=h.indexOf('day_nu');
-  const p10i=h.indexOf('p10_va'),p25i=h.indexOf('p25_va'),p50i=h.indexOf('p50_va');
-  const p75i=h.indexOf('p75_va'),p90i=h.indexOf('p90_va');
-  if(si<0) return;
-  const now=new Date(), tm=now.getMonth()+1, td=now.getDate();
-  for(let i=2;i<lines.length;i++){
-    const c=lines[i].split('\t');
-    if(!c[si]) continue;
-    if(parseInt(c[mi])!==tm||parseInt(c[di])!==td) continue;
-    const site=c[si].trim();
-    if(!gaugeData[site]) gaugeData[site]={};
-    const p10=parseFloat(c[p10i]),p25=parseFloat(c[p25i]),p50=parseFloat(c[p50i]);
-    const p75=parseFloat(c[p75i]),p90=parseFloat(c[p90i]);
-    const cur=gaugeData[site].cfs;
-    if(cur===null||cur===undefined||isNaN(cur)){gaugeData[site].pct=null;continue;}
-    let pct;
-    if     (cur>=p90) pct=90+10*Math.min(1,(cur-p90)/Math.max(1,p90*.3));
-    else if(cur>=p75) pct=75+15*((cur-p75)/Math.max(1,p90-p75));
-    else if(cur>=p50) pct=50+25*((cur-p50)/Math.max(1,p75-p50));
-    else if(cur>=p25) pct=25+25*((cur-p25)/Math.max(1,p50-p25));
-    else if(cur>=p10) pct=10+15*((cur-p10)/Math.max(1,p25-p10));
-    else              pct=Math.max(0,10*(cur/Math.max(1,p10)));
-    gaugeData[site].pct=Math.min(100,Math.max(0,pct));
-    gaugeData[site].p10=p10;gaugeData[site].p25=p25;gaugeData[site].p50=p50;
-    gaugeData[site].p75=p75;gaugeData[site].p90=p90;
+  // Stats / percentile — fetch in chunks of 5 to avoid USGS request size limit
+  const chunks = [];
+  for (let i = 0; i < toFetch.length; i += 5) {
+    chunks.push(toFetch.slice(i, i + 5));
+  }
+  for (const chunk of chunks) {
+    const chunkSites = chunk.map(g => g.id).join(',');
+    const statUrl = `https://waterservices.usgs.gov/nwis/stat/?format=rdb&sites=${chunkSites}&parameterCd=00060&statReportType=daily`;
+    try {
+      const res = await tryFetch(statUrl);
+      const rdb = await res.text();
+      parseRdb(rdb);
+    } catch(e) { console.warn('Stats chunk failed:', chunkSites, e.message); }
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RENDER GAUGE MARKERS
-// ─────────────────────────────────────────────────────────────────────────────
-function clearMarkers(){
-  markers.forEach(m=>map.removeLayer(m));
-  markers=[];
+function parseRdb(rdb) {
+  const lines = rdb.split('\n').filter(l => l && !l.startsWith('#'));
+  if (lines.length < 3) return;
+  const h    = lines[0].split('\t');
+  const si   = h.indexOf('site_no'),   mi  = h.indexOf('month_nu'), di  = h.indexOf('day_nu');
+  const p10i = h.indexOf('p10_va'),    p25i= h.indexOf('p25_va'),   p50i= h.indexOf('p50_va');
+  const p75i = h.indexOf('p75_va'),    p90i= h.indexOf('p90_va');
+  if (si < 0) return;
+  const now = new Date(), tm = now.getMonth()+1, td = now.getDate();
+  for (let i = 2; i < lines.length; i++) {
+    const c = lines[i].split('\t');
+    if (!c[si]) continue;
+    if (parseInt(c[mi]) !== tm || parseInt(c[di]) !== td) continue;
+    const site = c[si].trim();
+    if (!gaugeData[site]) gaugeData[site] = {};
+    const p10=parseFloat(c[p10i]), p25=parseFloat(c[p25i]), p50=parseFloat(c[p50i]);
+    const p75=parseFloat(c[p75i]), p90=parseFloat(c[p90i]);
+    const cur = gaugeData[site].cfs;
+    if (cur===null||cur===undefined||isNaN(cur)) { gaugeData[site].pct=null; continue; }
+    let pct;
+    if      (cur>=p90) pct=90+10*Math.min(1,(cur-p90)/Math.max(1,p90*.3));
+    else if (cur>=p75) pct=75+15*((cur-p75)/Math.max(1,p90-p75));
+    else if (cur>=p50) pct=50+25*((cur-p50)/Math.max(1,p75-p50));
+    else if (cur>=p25) pct=25+25*((cur-p25)/Math.max(1,p50-p25));
+    else if (cur>=p10) pct=10+15*((cur-p10)/Math.max(1,p25-p10));
+    else               pct=Math.max(0,10*(cur/Math.max(1,p10)));
+    gaugeData[site].pct = Math.min(100,Math.max(0,pct));
+    gaugeData[site].p10=p10; gaugeData[site].p25=p25; gaugeData[site].p50=p50;
+    gaugeData[site].p75=p75; gaugeData[site].p90=p90;
+  }
 }
 
-function renderGauges(basin){
+// ── MARKERS ───────────────────────────────────────────────────────────────────
+function clearMarkers() {
+  markers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
+  markers = [];
+}
+
+function renderGauges(basin) {
   clearMarkers();
-  GAUGES.filter(g=>g.basin===basin).forEach(g=>{
-    const d=gaugeData[g.id]||{};
-    const stage=(d.stage!==undefined)?d.stage:null;
-    const pct=(d.pct!==undefined)?d.pct:null;
-    const color=pctColor(pct,stage,g.flood);
-    const stageText=(stage!==null&&!isNaN(stage))?stage.toFixed(1)+'ft':'—';
+  GAUGES.filter(g => g.basin === basin).forEach(g => {
+    // Validate coordinates
+    if (!isFinite(g.lat) || !isFinite(g.lng)) return;
 
-    const div=document.createElement('div');
-    div.className='gm';
-    div.style.cssText=`background:${color};box-shadow:0 2px 12px rgba(0,0,0,.65),0 0 0 3px ${color}55;`;
-    div.innerHTML=`<span class="v">${stageText}</span><span class="u">stage</span>`;
+    const d      = gaugeData[g.id] || {};
+    const stage  = (d.stage !== undefined) ? d.stage : null;
+    const pct    = (d.pct   !== undefined) ? d.pct   : null;
+    const isLake = g.type === 'lake';
+    const color  = pctColor(pct, stage, g.flood);
+    const val    = (stage !== null && !isNaN(stage)) ? stage.toFixed(1) : '—';
 
-    const icon=L.divIcon({html:div.outerHTML,className:'',iconSize:[46,46],iconAnchor:[23,23]});
-    const m=L.marker([g.lat,g.lng],{icon,zIndexOffset:1000}).addTo(map);
-    m.on('click',()=>showPanel(g));
-    markers.push(m);
+    const div = document.createElement('div');
+    if (isLake) {
+      div.className = 'lm';
+      div.style.cssText = `background:${color};box-shadow:0 2px 12px rgba(0,0,0,.65),0 0 0 3px ${color}55;`;
+      div.innerHTML = `<span class="v">🏞 ${val}</span><span class="u">ft elev</span>`;
+    } else {
+      div.className = 'gm';
+      div.style.cssText = `background:${color};box-shadow:0 2px 12px rgba(0,0,0,.65),0 0 0 3px ${color}55;`;
+      div.innerHTML = `<span class="v">${val}</span><span class="u">ft</span>`;
+    }
+
+    try {
+      const icon = L.divIcon({html:div.outerHTML, className:'', iconSize:[isLake?50:46,isLake?50:46], iconAnchor:[isLake?25:23,isLake?25:23]});
+      const m = L.marker([g.lat, g.lng], {icon, zIndexOffset:1000}).addTo(map);
+      m.on('click', () => showPanel(g));
+      markers.push(m);
+    } catch(e) {
+      console.warn('Failed to add marker for', g.id, e.message);
+    }
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DETAIL PANEL
-// ─────────────────────────────────────────────────────────────────────────────
-function showPanel(g){
-  const d=gaugeData[g.id]||{};
-  const stage=(d.stage!==undefined)?d.stage:null;
-  const cfs=(d.cfs!==undefined)?d.cfs:null;
-  const pct=(d.pct!==undefined)?d.pct:null;
-  const lbl=pctLabel(pct,stage,g.flood);
-
-  document.getElementById('p-name').textContent=g.name;
-  document.getElementById('p-sub').textContent=g.basin+' basin · USGS '+g.id;
-  document.getElementById('p-stage').textContent=(stage!==null&&!isNaN(stage))?stage.toFixed(2):'—';
-  document.getElementById('p-cfs').textContent=(cfs!==null&&!isNaN(cfs))?Math.round(cfs).toLocaleString():'—';
-
-  document.getElementById('p-bdot').style.background=lbl.color;
-  document.getElementById('p-blabel').textContent=lbl.text;
-  const badge=document.getElementById('p-badge');
-  badge.style.background=lbl.color+'22';
-  badge.style.color=lbl.color;
-
-  document.getElementById('p-pct').textContent=
-    (d.p50!==undefined)?`30-yr median: ${Math.round(d.p50)} cfs  |  p10: ${Math.round(d.p10)}  p90: ${Math.round(d.p90)}`:'';
-
-  const trend=getTrend(d.stageVals);
-  const te=document.getElementById('p-trend');
-  if(trend&&trend.dir!=='stable'){
-    te.className='p-trend '+(trend.dir==='up'?'t-up':'t-dn');
-    te.textContent=(trend.dir==='up'?'▲ Rising ':'▼ Falling ')+Math.abs(trend.diff).toFixed(2)+'ft / 1hr';
-  }else if(trend){te.className='p-trend t-st';te.textContent='→ Stable';}
-  else{te.textContent='';}
-
-  document.getElementById('p-updated').textContent=d.time?'Updated '+new Date(d.time).toLocaleTimeString():'';
-  document.getElementById('p-link').href='https://waterdata.usgs.gov/monitoring-location/'+g.id+'/';
-  document.getElementById('panel').style.display='block';
+// ── PANEL ─────────────────────────────────────────────────────────────────────
+function getTrend(vals) {
+  if (!vals || vals.length < 2) return null;
+  const last = parseFloat(vals[vals.length-1][1]);
+  const prev = parseFloat(vals[Math.max(0,vals.length-6)][1]);
+  if (isNaN(last)||isNaN(prev)) return null;
+  const diff = last - prev;
+  if (Math.abs(diff) < 0.05) return {dir:'stable',diff:0};
+  return {dir:diff>0?'up':'down',diff};
 }
 
-function closePanel(){document.getElementById('panel').style.display='none';}
+function showPanel(g) {
+  const d     = gaugeData[g.id] || {};
+  const stage = (d.stage!==undefined) ? d.stage : null;
+  const cfs   = (d.cfs  !==undefined) ? d.cfs   : null;
+  const pct   = (d.pct  !==undefined) ? d.pct   : null;
+  const lbl   = pctLabel(pct, stage, g.flood);
 
-function getTrend(vals){
-  if(!vals||vals.length<2) return null;
-  const last=parseFloat(vals[vals.length-1][1]);
-  const prev=parseFloat(vals[Math.max(0,vals.length-6)][1]);
-  if(isNaN(last)||isNaN(prev)) return null;
-  const diff=last-prev;
-  if(Math.abs(diff)<0.05) return{dir:'stable',diff:0};
-  return{dir:diff>0?'up':'down',diff};
+  document.getElementById('p-name').textContent        = g.name;
+  document.getElementById('p-sub').textContent         = (g.type==='lake'?'🏞 Lake':'🌊 River') + ' · ' + g.basin + ' basin · USGS ' + g.id;
+  document.getElementById('p-height-label').textContent= g.type==='lake' ? 'Lake Elevation' : 'Gauge Height';
+  document.getElementById('p-stage').textContent       = (stage!==null&&!isNaN(stage)) ? stage.toFixed(2) : '—';
+  document.getElementById('p-cfs').textContent         = (cfs!==null&&!isNaN(cfs)) ? Math.round(cfs).toLocaleString() : '—';
+
+  document.getElementById('p-bdot').style.background   = lbl.color;
+  document.getElementById('p-blabel').textContent      = lbl.text;
+  const badge = document.getElementById('p-badge');
+  badge.style.background = lbl.color + '22';
+  badge.style.color      = lbl.color;
+
+  document.getElementById('p-pct').textContent =
+    (d.p50!==undefined) ? `30-yr median: ${Math.round(d.p50)} cfs  ·  p10:${Math.round(d.p10)}  p90:${Math.round(d.p90)}` : '';
+
+  const trend = getTrend(d.stageVals);
+  const te    = document.getElementById('p-trend');
+  if (trend && trend.dir!=='stable') {
+    te.className  = 'p-trend '+(trend.dir==='up'?'t-up':'t-dn');
+    te.textContent= (trend.dir==='up'?'▲ Rising ':'▼ Falling ')+Math.abs(trend.diff).toFixed(2)+'ft / 1hr';
+  } else if (trend) {
+    te.className='p-trend t-st'; te.textContent='→ Stable';
+  } else { te.textContent=''; }
+
+  document.getElementById('p-updated').textContent = d.time ? 'Updated '+new Date(d.time).toLocaleTimeString() : '';
+  document.getElementById('p-link').href = 'https://waterdata.usgs.gov/monitoring-location/'+g.id+'/';
+  document.getElementById('panel').style.display = 'block';
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BASIN CHANGE
-// ─────────────────────────────────────────────────────────────────────────────
-function setStatus(txt,loading=false){
-  document.getElementById('status-txt').textContent=txt;
-  document.getElementById('spin').style.display=loading?'block':'none';
+function closePanel() { document.getElementById('panel').style.display='none'; }
+
+// ── STATUS ────────────────────────────────────────────────────────────────────
+function setStatus(txt, loading=false) {
+  document.getElementById('status-txt').textContent  = txt;
+  document.getElementById('spin').style.display      = loading ? 'block' : 'none';
 }
 
-async function onBasinChange(basin){
-  if(!basin) return;
-  activeBasin=basin;
+// ── BASIN CHANGE ──────────────────────────────────────────────────────────────
+async function onBasinChange(basin) {
+  if (!basin) return;
+  activeBasin = basin;
   closePanel();
   clearMarkers();
-  clearRivers();
 
-  document.getElementById('idle').style.display='none';
-  document.getElementById('legend-bar').style.display='flex';
-  document.getElementById('refresh-btn').style.display='flex';
+  document.getElementById('idle').style.display       = 'none';
+  document.getElementById('legend-bar').style.display = 'flex';
+  document.getElementById('refresh-btn').style.display= 'flex';
 
-  const v=VIEWS[basin]||[29.6,-98.8,8];
-  map.flyTo([v[0],v[1]],v[2],{duration:1.2});
+  const v = VIEWS[basin] || {lat:29.6, lng:-98.8, zoom:8};
+  map.setView([v.lat, v.lng], v.zoom);
+  setTimeout(() => { map.invalidateSize(); }, 150);
 
-  setStatus('Loading USGS data for '+basin+' basin…',true);
+  setStatus('Loading USGS data for '+basin+' basin…', true);
 
-  // Fetch river line and gauge data in parallel
-  await Promise.allSettled([
-    fetchAndDrawRiver(basin),
-    fetchBasin(basin).then(()=>{
-      setStatus('Live · '+new Date().toLocaleTimeString()+' — tap a gauge for details');
-    }).catch(e=>{
-      setStatus('Data load failed: '+e.message+' — try Refresh');
-    })
-  ]);
+  try {
+    await fetchBasin(basin);
+    setStatus('Live · '+new Date().toLocaleTimeString()+' — tap a gauge for details');
+  } catch(e) {
+    setStatus('Data load failed — tap Refresh to retry');
+  }
 
   renderGauges(basin);
 }
 
-async function refreshData(){
-  if(!activeBasin) return;
-  GAUGES.filter(g=>g.basin===activeBasin).forEach(g=>delete gaugeData[g.id]);
+async function refreshData() {
+  if (!activeBasin) return;
+  GAUGES.filter(g => g.basin===activeBasin).forEach(g => delete gaugeData[g.id]);
   closePanel();
-  setStatus('Refreshing…',true);
-  try{
+  setStatus('Refreshing…', true);
+  try {
     await fetchBasin(activeBasin);
     setStatus('Refreshed · '+new Date().toLocaleTimeString()+' — tap a gauge for details');
-  }catch(e){
-    setStatus('Refresh failed: '+e.message);
+  } catch(e) {
+    setStatus('Refresh failed — check connection');
   }
   renderGauges(activeBasin);
 }
 
-initMap();
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  initMap();
+});
 </script>
 </body>
 </html>
