@@ -700,10 +700,9 @@ window.addEventListener('load', () => {
     document.getElementById('disclaimer-overlay').style.display = 'none';
   }
   initMap();
-  // Fetch official NWS flood stages in background, then load default basin
-  fetchNWSFloodStages().finally(() => {
-    setTimeout(() => onBasinChange('Guadalupe'), 300);
-  });
+  // Load default basin immediately, fetch NWS flood stages in background
+  setTimeout(() => onBasinChange('Guadalupe'), 300);
+  fetchNWSFloodStages(); // runs in background, doesn't block map load
 });
 </script>
 </body>
