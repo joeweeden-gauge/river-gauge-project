@@ -21,11 +21,9 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 }
 #hdr h1{font-size:15px;font-weight:600;white-space:nowrap;}
 #hdr h1 span{color:var(--accent);}
-#basin-select{
-  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
-  padding:6px 12px;border-radius:8px;border:1px solid var(--border);
-  background:var(--surface2);color:var(--text);cursor:pointer;outline:none;min-width:215px;
-}
+.basin-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:13px;color:var(--text);cursor:pointer;border-radius:4px;}
+.basin-opt:hover{background:var(--surface2);}
+.basin-opt input{cursor:pointer;accent-color:var(--accent);}
 #refresh-btn{
   font-family:'Outfit',sans-serif;font-size:12px;padding:6px 12px;
   border-radius:8px;border:1px solid var(--border);background:transparent;
@@ -123,16 +121,34 @@ html,body{height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color
 <div id="shell">
   <div id="hdr">
     <h1>Texas Hill Country <span>River Gauges</span></h1>
-    <select id="basin-select" onchange="onBasinChange(this.value)">
-      <option value="">— Select a river basin —</option>
-      <option value="Guadalupe" selected>Guadalupe River</option>
-      <option value="Comal">Comal River</option>
-      <option value="Blanco">Blanco River</option>
-      <option value="SanAntonio">San Antonio River</option>
-      <option value="Medina">Medina River</option>
-      <option value="Frio">Frio River</option>
-      <option value="Nueces">Nueces River</option>
-    </select>
+    <div style="position:relative;">
+      <button id="basin-btn" onclick="toggleBasinMenu()" style="
+        font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+        padding:6px 12px;border-radius:8px;border:1px solid var(--border);
+        background:var(--surface2);color:var(--text);cursor:pointer;outline:none;
+        min-width:215px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span id="basin-btn-label">Select basins…</span>
+        <span style="font-size:10px;color:var(--text3);">▾</span>
+      </button>
+      <div id="basin-menu" style="
+        position:absolute;top:calc(100% + 4px);left:0;
+        background:var(--surface);border:1px solid var(--border);
+        border-radius:8px;padding:8px;min-width:215px;display:none;z-index:1100;
+        box-shadow:0 4px 16px rgba(0,0,0,.5);">
+        <label class="basin-opt"><input type="checkbox" value="Guadalupe"  onchange="onBasinToggle()" checked> Guadalupe River</label>
+        <label class="basin-opt"><input type="checkbox" value="Comal"      onchange="onBasinToggle()"> Comal River</label>
+        <label class="basin-opt"><input type="checkbox" value="Blanco"     onchange="onBasinToggle()"> Blanco River</label>
+        <label class="basin-opt"><input type="checkbox" value="SanAntonio" onchange="onBasinToggle()"> San Antonio River</label>
+        <label class="basin-opt"><input type="checkbox" value="Medina"     onchange="onBasinToggle()"> Medina River</label>
+        <label class="basin-opt"><input type="checkbox" value="Frio"       onchange="onBasinToggle()"> Frio River</label>
+        <label class="basin-opt"><input type="checkbox" value="Nueces"     onchange="onBasinToggle()"> Nueces River</label>
+      </div>
+    </div>
+    <!-- Unit toggle -->
+    <div id="unit-toggle" style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+      <button onclick="setUnit('cfs')" id="unit-cfs" style="font-family:'Outfit',sans-serif;font-size:12px;padding:6px 12px;border:none;background:var(--accent);color:#fff;cursor:pointer;">CFS</button>
+      <button onclick="setUnit('ft')" id="unit-ft" style="font-family:'Outfit',sans-serif;font-size:12px;padding:6px 12px;border:none;background:transparent;color:var(--text2);cursor:pointer;">Ft</button>
+    </div>
     <button id="refresh-btn" onclick="refreshData()">↺ Refresh</button>
     <div id="status-pill">
       <div class="spin" id="spin"></div>
@@ -196,31 +212,54 @@ const GAUGES = [
   {id:'08167500',name:'Guadalupe nr Spring Branch',   basin:'Guadalupe',  flood:20, lat:29.8597, lng:-98.4739, type:'river', nws:'SPBT2'},
   {id:'08167700',name:'Canyon Lake',                  basin:'Guadalupe',  flood:943,lat:29.8783, lng:-98.2003, type:'lake'},
   {id:'08167800',name:'Guadalupe at Sattler',         basin:'Guadalupe',  flood:18, lat:29.8667, lng:-98.1819, type:'river'},
+  {id:'08168500',name:'Guadalupe abv Comal at NB',    basin:'Guadalupe',  flood:20, lat:29.7039, lng:-98.1311, type:'river'},
   {id:'08169500',name:'Guadalupe at New Braunfels',   basin:'Guadalupe',  flood:22, lat:29.6950, lng:-98.1100, type:'river', nws:'NBRT2'},
   {id:'08173900',name:'Guadalupe at Gonzales',        basin:'Guadalupe',  flood:31, lat:29.5100, lng:-97.4514, type:'river', nws:'GNZT2'},
   {id:'08175000',name:'Guadalupe at Seguin',          basin:'Guadalupe',  flood:24, lat:29.5708, lng:-97.9681, type:'river', nws:'SEGT2'},
   {id:'08175800',name:'Guadalupe at Cuero',           basin:'Guadalupe',  flood:28, lat:29.0750, lng:-97.2933, type:'river', nws:'CERT2'},
   {id:'08176500',name:'Guadalupe at Victoria',        basin:'Guadalupe',  flood:28, lat:28.7922, lng:-97.0183, type:'river', nws:'VICT2'},
+  {id:'08188800',name:'Guadalupe nr Tivoli',          basin:'Guadalupe',  flood:14, lat:28.4675, lng:-96.8983, type:'river'},
+
   // ── Comal River ──────────────────────────────────────────────────────────────
-  {id:'08169000',name:'Comal River at New Braunfels', basin:'Comal',      flood:15, lat:29.7100, lng:-98.1311, type:'river', nws:'CMLT2'},
+  {id:'08168710',name:'Comal Springs at New Braunfels',basin:'Comal',     flood:5,  lat:29.7117, lng:-98.1383, type:'river'},
+  {id:'08168913',name:'Comal R. (old channel) Landa', basin:'Comal',     flood:8,  lat:29.7106, lng:-98.1375, type:'river'},
+  {id:'08168932',name:'Comal R. (new channel) Landa', basin:'Comal',     flood:8,  lat:29.7100, lng:-98.1361, type:'river'},
+  {id:'08169000',name:'Comal River at New Braunfels', basin:'Comal',     flood:15, lat:29.7100, lng:-98.1311, type:'river', nws:'CMLT2'},
+
   // ── Blanco River ─────────────────────────────────────────────────────────────
-  {id:'08171000',name:'Blanco River at Wimberley',    basin:'Blanco',     flood:20, lat:29.9983, lng:-98.1003, type:'river', nws:'WMBT2'},
-  {id:'08171300',name:'Blanco River at Kyle',         basin:'Blanco',     flood:22, lat:30.0141, lng:-97.8781, type:'river'},
+  {id:'08170800',name:'Blanco at Crabapple Rd',       basin:'Blanco',     flood:14, lat:30.1025, lng:-98.5106, type:'river'},
+  {id:'08170950',name:'Blanco at Fischer Store',      basin:'Blanco',     flood:18, lat:29.9750, lng:-98.2742, type:'river'},
+  {id:'08170990',name:'Jacobs Well Spring',           basin:'Blanco',     flood:5,  lat:30.0344, lng:-98.1264, type:'river'},
+  {id:'08171000',name:'Blanco River at Wimberley',    basin:'Blanco',     flood:13, lat:29.9983, lng:-98.1003, type:'river', nws:'WMBT2'},
+  {id:'08171300',name:'Blanco River nr Kyle',         basin:'Blanco',     flood:14, lat:29.9792, lng:-97.9097, type:'river'},
   {id:'08171350',name:'Blanco River at San Marcos',   basin:'Blanco',     flood:18, lat:29.8830, lng:-97.9414, type:'river'},
+
   // ── San Antonio River ─────────────────────────────────────────────────────────
-  {id:'08178000',name:'San Antonio River at SA',      basin:'SanAntonio', flood:18, lat:29.4247, lng:-98.4928, type:'river', nws:'SAAT2'},
-  {id:'08178565',name:'San Antonio R. at Loop 410',   basin:'SanAntonio', flood:20, lat:29.3794, lng:-98.5292, type:'river'},
-  {id:'08178800',name:'San Antonio R. nr Elmendorf',  basin:'SanAntonio', flood:20, lat:29.2558, lng:-98.3183, type:'river', nws:'ELMT2'},
+  {id:'08178000',name:'San Antonio R. at SA',         basin:'SanAntonio', flood:18, lat:29.4247, lng:-98.4928, type:'river', nws:'SAAT2'},
+  {id:'08178565',name:'SA River at Loop 410',         basin:'SanAntonio', flood:20, lat:29.3794, lng:-98.5292, type:'river'},
+  {id:'08178800',name:'SA River nr Elmendorf',        basin:'SanAntonio', flood:20, lat:29.2558, lng:-98.3183, type:'river', nws:'ELMT2'},
+  {id:'08183500',name:'SA River nr Falls City',       basin:'SanAntonio', flood:18, lat:28.9789, lng:-98.0064, type:'river', nws:'FCYT2'},
+  {id:'08188500',name:'SA River at Goliad',           basin:'SanAntonio', flood:21, lat:28.6489, lng:-97.3833, type:'river', nws:'GOLT2'},
+
   // ── Medina River ─────────────────────────────────────────────────────────────
-  {id:'08198500',name:'Medina River at Bandera',      basin:'Medina',     flood:16, lat:29.7272, lng:-99.0736, type:'river', nws:'BNDT2'},
+  {id:'08178880',name:'Medina River at Bandera',      basin:'Medina',     flood:13, lat:29.7269, lng:-99.0739, type:'river', nws:'BNDT2'},
   {id:'08178980',name:'Medina R. abv Pipe Creek',     basin:'Medina',     flood:18, lat:29.6775, lng:-98.9397, type:'river'},
   {id:'08194000',name:'Medina Lake',                  basin:'Medina',     flood:1070,lat:29.5397,lng:-98.9350, type:'lake'},
+  {id:'08180640',name:'Medina River at La Coste',     basin:'Medina',     flood:24, lat:29.3239, lng:-98.8128, type:'river'},
+  {id:'08180700',name:'Medina River nr Macdona',      basin:'Medina',     flood:23, lat:29.3014, lng:-98.6925, type:'river'},
   {id:'08199500',name:'Medina River at Castroville',  basin:'Medina',     flood:22, lat:29.3597, lng:-98.8800, type:'river', nws:'CVLT2'},
+
   // ── Frio River ───────────────────────────────────────────────────────────────
   {id:'08194840',name:'Frio River at Leakey',         basin:'Frio',       flood:14, lat:29.7228, lng:-99.7983, type:'river', nws:'LKET2'},
   {id:'08194880',name:'Frio River bl Leakey',         basin:'Frio',       flood:15, lat:29.6947, lng:-99.7650, type:'river'},
   {id:'08194500',name:'Frio River at Concan',         basin:'Frio',       flood:16, lat:29.4872, lng:-99.7042, type:'river', nws:'CONT2'},
   {id:'08195000',name:'Frio River at Uvalde',         basin:'Frio',       flood:22, lat:29.2094, lng:-99.7856, type:'river', nws:'UVLT2'},
+
+  // ── Sabinal River (tributary of Frio basin watershed) ────────────────────────
+  {id:'08197936',name:'Sabinal R. bl Mill Crk Vanderpool', basin:'Frio', flood:14, lat:29.7397, lng:-99.5575, type:'river'},
+  {id:'08197970',name:'Sabinal River at Utopia',      basin:'Frio',       flood:15, lat:29.6075, lng:-99.5286, type:'river'},
+  {id:'08198000',name:'Sabinal River nr Sabinal',     basin:'Frio',       flood:14, lat:29.4678, lng:-99.4811, type:'river'},
+
   // ── Nueces River ─────────────────────────────────────────────────────────────
   {id:'08196500',name:'Nueces River at Laguna',       basin:'Nueces',     flood:20, lat:29.7419, lng:-100.019, type:'river'},
   {id:'08192000',name:'Nueces River bl Uvalde',       basin:'Nueces',     flood:22, lat:29.1858, lng:-99.7475, type:'river'},
@@ -274,7 +313,49 @@ const VIEWS = {
 };
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let map = null, activeBasin = null, gaugeData = {}, markers = [];
+let map = null, gaugeData = {}, markers = [];
+let activeBasins = ['Guadalupe']; // multi-select array
+let displayUnit  = 'cfs';          // 'cfs' or 'ft'
+
+function toggleBasinMenu() {
+  const m = document.getElementById('basin-menu');
+  m.style.display = m.style.display === 'block' ? 'none' : 'block';
+}
+// Close menu when clicking outside
+document.addEventListener('click', e => {
+  const menu = document.getElementById('basin-menu');
+  const btn  = document.getElementById('basin-btn');
+  if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+function onBasinToggle() {
+  const checks = document.querySelectorAll('#basin-menu input[type="checkbox"]');
+  activeBasins = Array.from(checks).filter(c => c.checked).map(c => c.value);
+  updateBasinLabel();
+  loadActiveBasins();
+}
+
+function updateBasinLabel() {
+  const lbl = document.getElementById('basin-btn-label');
+  if (activeBasins.length === 0) lbl.textContent = 'Select basins…';
+  else if (activeBasins.length === 1) {
+    const names = {Guadalupe:'Guadalupe',Comal:'Comal',Blanco:'Blanco',SanAntonio:'San Antonio',Medina:'Medina',Frio:'Frio',Nueces:'Nueces'};
+    lbl.textContent = names[activeBasins[0]] + ' River';
+  }
+  else lbl.textContent = activeBasins.length + ' basins selected';
+}
+
+function setUnit(u) {
+  displayUnit = u;
+  document.getElementById('unit-cfs').style.background = u === 'cfs' ? 'var(--accent)' : 'transparent';
+  document.getElementById('unit-cfs').style.color      = u === 'cfs' ? '#fff' : 'var(--text2)';
+  document.getElementById('unit-ft').style.background  = u === 'ft'  ? 'var(--accent)' : 'transparent';
+  document.getElementById('unit-ft').style.color       = u === 'ft'  ? '#fff' : 'var(--text2)';
+  // Re-render markers with new unit
+  renderAllGauges();
+}
 
 // ── MAP INIT ──────────────────────────────────────────────────────────────────
 function initMap() {
@@ -430,17 +511,15 @@ function clearMarkers() {
   markers = [];
 }
 
-function renderGauges(basin) {
+function renderAllGauges() {
   clearMarkers();
-  GAUGES.filter(g => g.basin === basin && g.type !== 'lake').forEach(g => {
-    // Validate coordinates
+  GAUGES.filter(g => activeBasins.includes(g.basin) && g.type !== 'lake').forEach(g => {
     if (!isFinite(g.lat) || !isFinite(g.lng)) return;
-
     const d      = gaugeData[g.id] || {};
     const stage  = (d.stage !== undefined) ? d.stage : null;
+    const cfs    = (d.cfs   !== undefined) ? d.cfs   : null;
     const pct    = (d.pct   !== undefined) ? d.pct   : null;
     const color  = pctColor(pct, stage, g.flood);
-    const val    = (stage !== null && !isNaN(stage)) ? stage.toFixed(1) : '—';
     const textColor = (color === '#ffffff' || color === '#90caf9') ? '#333' : '#fff';
 
     const trend = getTrend(d.stageVals);
@@ -450,10 +529,19 @@ function renderGauges(basin) {
        : '<span style="font-size:10px;line-height:1;">→</span>')
       : '';
 
+    let valText, unitText;
+    if (displayUnit === 'cfs') {
+      valText  = (cfs !== null && !isNaN(cfs)) ? (cfs >= 1000 ? (cfs/1000).toFixed(1)+'k' : Math.round(cfs).toString()) : '—';
+      unitText = 'cfs';
+    } else {
+      valText  = (stage !== null && !isNaN(stage)) ? stage.toFixed(1) : '—';
+      unitText = 'ft';
+    }
+
     const div = document.createElement('div');
     div.className = 'gm';
     div.style.cssText = `background:${color};box-shadow:0 2px 12px rgba(0,0,0,.65),0 0 0 3px ${color}55;color:${textColor};`;
-    div.innerHTML = `<span class="v">${val}</span><span class="u">ft</span>${arrow}`;
+    div.innerHTML = `<span class="v">${valText}</span><span class="u">${unitText}</span>${arrow}`;
 
     try {
       const icon = L.divIcon({html:div.outerHTML, className:'', iconSize:[52,52], iconAnchor:[26,26]});
@@ -465,6 +553,9 @@ function renderGauges(basin) {
     }
   });
 }
+
+// Backward compat
+function renderGauges(basin) { renderAllGauges(); }
 
 // ── PANEL ─────────────────────────────────────────────────────────────────────
 function getTrend(vals) {
@@ -645,44 +736,66 @@ function setStatus(txt, loading=false) {
 }
 
 // ── BASIN CHANGE ──────────────────────────────────────────────────────────────
-async function onBasinChange(basin) {
-  if (!basin) return;
-  activeBasin = basin;
+async function loadActiveBasins() {
   closePanel();
   clearMarkers();
+
+  if (activeBasins.length === 0) {
+    document.getElementById('idle').style.display       = 'flex';
+    document.getElementById('legend-bar').style.display = 'none';
+    document.getElementById('refresh-btn').style.display= 'none';
+    setStatus('Select a basin to begin');
+    return;
+  }
 
   document.getElementById('idle').style.display       = 'none';
   document.getElementById('legend-bar').style.display = 'flex';
   document.getElementById('refresh-btn').style.display= 'flex';
 
-  const v = VIEWS[basin] || {lat:29.6, lng:-98.8, zoom:8};
-  map.setView([v.lat, v.lng], v.zoom);
-  setTimeout(() => { map.invalidateSize(); }, 150);
-
-  setStatus('Loading USGS data for '+basin+' basin…', true);
-
-  try {
-    await fetchBasin(basin);
-    setStatus('Live · '+new Date().toLocaleTimeString()+' — tap a gauge for details');
-  } catch(e) {
-    setStatus('Data load failed — tap Refresh to retry');
+  // Auto-zoom to fit all selected basins
+  const visibleGauges = GAUGES.filter(g => activeBasins.includes(g.basin) && g.type !== 'lake');
+  if (visibleGauges.length > 0) {
+    const lats = visibleGauges.map(g => g.lat);
+    const lngs = visibleGauges.map(g => g.lng);
+    const bounds = [[Math.min(...lats)-0.1, Math.min(...lngs)-0.1], [Math.max(...lats)+0.1, Math.max(...lngs)+0.1]];
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+    setTimeout(() => map.invalidateSize(), 150);
   }
 
-  renderGauges(basin);
+  setStatus('Loading USGS data…', true);
+
+  for (const basin of activeBasins) {
+    try {
+      await fetchBasin(basin);
+    } catch(e) { console.warn('Basin fetch failed:', basin, e.message); }
+  }
+
+  setStatus('Live · '+new Date().toLocaleTimeString()+' — tap a gauge for details');
+  renderAllGauges();
+}
+
+async function onBasinChange(basin) {
+  if (!basin) return;
+  document.querySelectorAll('#basin-menu input[type="checkbox"]').forEach(c => {
+    c.checked = (c.value === basin);
+  });
+  activeBasins = [basin];
+  updateBasinLabel();
+  await loadActiveBasins();
 }
 
 async function refreshData() {
-  if (!activeBasin) return;
-  GAUGES.filter(g => g.basin===activeBasin).forEach(g => delete gaugeData[g.id]);
+  if (activeBasins.length === 0) return;
+  activeBasins.forEach(basin => {
+    GAUGES.filter(g => g.basin === basin).forEach(g => delete gaugeData[g.id]);
+  });
   closePanel();
   setStatus('Refreshing…', true);
-  try {
-    await fetchBasin(activeBasin);
-    setStatus('Refreshed · '+new Date().toLocaleTimeString()+' — tap a gauge for details');
-  } catch(e) {
-    setStatus('Refresh failed — check connection');
+  for (const basin of activeBasins) {
+    try { await fetchBasin(basin); } catch(e) {}
   }
-  renderGauges(activeBasin);
+  setStatus('Refreshed · '+new Date().toLocaleTimeString()+' — tap a gauge for details');
+  renderAllGauges();
 }
 
 // ── DISCLAIMER ────────────────────────────────────────────────────────────────
@@ -700,8 +813,9 @@ window.addEventListener('load', () => {
     document.getElementById('disclaimer-overlay').style.display = 'none';
   }
   initMap();
-  // Load default basin immediately, fetch NWS flood stages in background
-  setTimeout(() => onBasinChange('Guadalupe'), 300);
+  updateBasinLabel();
+  // Load default basin (Guadalupe) immediately
+  setTimeout(() => loadActiveBasins(), 300);
   fetchNWSFloodStages(); // runs in background, doesn't block map load
 });
 </script>
